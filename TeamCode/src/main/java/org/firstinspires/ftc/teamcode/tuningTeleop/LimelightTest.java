@@ -30,17 +30,10 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode.teleop;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.LLStatus;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+package org.firstinspires.ftc.teamcode.tuningTeleop;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.checkerframework.checker.units.qual.C;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.component.Camlight;
 
 import java.util.List;
@@ -81,8 +74,17 @@ public class LimelightTest extends LinearOpMode {
          */
         waitForStart();
         while (opModeIsActive()) {
-            telemetry.addData("Pose: ", limelight.getRobotPose());
+            String result = "";
+            List<List<Double>> corners = limelight.getSampleOrientation();
+            for(int i = 0; i<corners.size(); i++){
+                for(int j = 0; j < corners.get(i).size(); j++){
+                    result = result.concat(corners.get(i).get(j) + " ");
+                }
+                result = result.concat("\n");
+            }
+            telemetry.addData("Res: ", result);
             telemetry.update();
+
         }
     }
 }

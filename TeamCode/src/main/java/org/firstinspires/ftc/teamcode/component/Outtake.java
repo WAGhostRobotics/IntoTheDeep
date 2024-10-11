@@ -5,17 +5,16 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class Outtake {
     private Servo arm;
-    private Servo microDump;
 
     public enum ArmPos {
-        LOAD(0), DUMP(0.4);
+        LOAD(1), DUMP(0.511);
         private final double pos;
 
         ArmPos(double val) {
             this.pos = val;
         }
 
-        public double getTicks() {
+        public double getPos() {
             return pos;
         }
     }
@@ -24,35 +23,25 @@ public class Outtake {
 
     public void init(HardwareMap hwMap) {
         arm = hwMap.get(Servo.class, "arm");
-        microDump = hwMap.get(Servo.class, "microDump");
-        arm.setPosition(0);
-        microDump.setPosition(0);
+        arm.setPosition(ArmPos.LOAD.pos);
+        armPos = ArmPos.LOAD.getPos();
     }
 
     public void liftArm() {
-        armPos+=0.001;
-        setArmPosition();
+        if (armPos > ArmPos.DUMP.getPos())
+            armPos-=0.005;
+        setArmPosition(armPos);
     }
     public void lowerArm() {
-        armPos-=0.001;
-        setArmPosition();
+        armPos+=0.01;
+        setArmPosition(armPos);
     }
 
-    public void liftDump() {
-        dumpPos+=0.001;
-        setDumpPosition();
+    public void setArmPosition(double pos) {
+        armPos = pos;
+        arm.setPosition(pos);
     }
 
-    public void lowerDump() {
-        dumpPos-=0.001;
-        setDumpPosition();
-    }
+    public double getArmPosition() {return arm.getPosition();}
 
-    private void setArmPosition() {
-        arm.setPosition(armPos);
-    }
-
-    private void setDumpPosition() {
-        microDump.setPosition(dumpPos);
-    }
 }

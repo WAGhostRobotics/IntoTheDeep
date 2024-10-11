@@ -13,7 +13,11 @@ public class OuttakeSlides {
 
     private DcMotorEx slide1;
     private DcMotorEx slide2;
+    public static double slideK = -0.0005;
+    private double power = 0.5;
+    public double pw;
     private final double ERROR = 67.5;
+    public int increment = 100;
 
     private final double zeroPwr = 0;
 
@@ -27,10 +31,10 @@ public class OuttakeSlides {
 
     public enum TurnValue {
         SUPER_RETRACTED(-100),
-        RETRACTED(350),
+        RETRACTED(0),
         INTAKE(0),
         BUCKET(750), // 880
-        BUCKET2(900),
+        BUCKET2(-800),
         CLIMB(1960); //880
 
         int ticks;
@@ -47,38 +51,33 @@ public class OuttakeSlides {
     public void init(HardwareMap hwMap, boolean teleop) {
         slide1 = hwMap.get(DcMotorEx.class, "slide1");
         slide2 = hwMap.get(DcMotorEx.class, "slide2");
-        slide1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        slide2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        slide1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        slide2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        if (!teleop) {
-            slide1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            slide2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        }
+//        if (!teleop) {
+//            slide1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//            slide2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        }
 
         stallCurrent = hwMap.voltageSensor.iterator().next().getVoltage()/2.2;
 
-        setTargetPosition(0);
+//        setTargetPosition(0);
     }
 
     public void setTargetPosition(int targetPos){
         slide1.setTargetPosition(targetPos);
     }
-
-    public int getTargetPosition(){
+    public int getCurrentPosition() {return slide1.getCurrentPosition();}
+    public double getTargetPosition(){
         return slide1.getTargetPosition();
     }
 
     public void update(){
-        if(slide1.getTargetPosition()==OuttakeSlides.TurnValue.SUPER_RETRACTED.getTicks()&& slide1.getCurrentPosition()<=0){
-            slide1.setTargetPosition(0);
-            slide2.setTargetPosition(0);
-        }else{
-            double pw = Range.clip(slideController.calculate(0, slide1.getTargetPosition() - slide1.getCurrentPosition()), -1, 1);
+            pw = Range.clip(slideController.calculate(0, slide1.getTargetPosition() - slide1.getCurrentPosition()), -1, 1);
             // sets power and mode
 //            pw = pw + feedForward*(slide1.getCurrentPosition());
             slide1.setPower(pw);
             slide2.setPower(pw);
-        }
 
 
     }
@@ -94,15 +93,17 @@ public class OuttakeSlides {
     public void goUp() {
 //        slide1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 //        slide2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        slide1.setPower(1);
-        slide2.setPower(1);
+        pw = -1;
+        slide1.setPower(-power);
+        slide2.setPower(-power);
     }
 
     public void goDown() {
 //        slide1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 //        slide2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        slide1.setPower(-1);
-        slide2.setPower(-1);
+        pw = 1;
+        slide1.setPower(power);
+        slide2.setPower(power);
     }
 
     public int getTicks(){
@@ -123,7 +124,18 @@ public class OuttakeSlides {
 
     public void stopSlides(){
         // value added to prevent sliding down
-        slide1.setPower(Range.clip(zeroPwr + slide1.getCurrentPosition() * 0.00001, -1, 1));
-        slide2.setPower(Range.clip(zeroPwr + slide1.getCurrentPosition() * 0.00001, -1, 1));
+        slide1.setPower(Range.clip(zeroPwr + slide1.getCurrentPosition() * 0.0001, -1, 1));
+        slide2.setPower(Range.clip(zeroPwr + slide1.getCurrentPosition() * 0.0001, -1, 1));
+//    slide1.setPower(0);
+//    slide2.setPower(0);
+    }
+
+    public double getPW() {return pw;}
+
+    public void holdSlide() {
+        double pos = slide1.getCurrentPosition();
+        pw = pos*slideK;
+        slide1.setPower(pw);
+        slide2.setPower(pw);
     }
 }
